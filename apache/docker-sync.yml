@@ -1,0 +1,20 @@
+version: '2'
+
+options:
+  compose-file-path: 'docker-compose.yml'
+  verbose: false
+
+syncs:
+  # App volume
+  app_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${APP_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+
+  # # Db volume
+  # db_sync:
+  #   notify_terminal: false
+  #   sync_strategy: 'native_osx'
+  #   src: '${DB_PATH}'
+  #   sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
