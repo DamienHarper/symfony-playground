@@ -1,6 +1,5 @@
 .idea
 .DS_Store
 .env
-shared/logs/
-shared/data/
-
+data/
+apps/*
