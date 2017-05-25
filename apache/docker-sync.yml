@@ -12,9 +12,38 @@ syncs:
     src: '${APP_PATH}'
     sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
 
-  # # Db volume
-  # db_sync:
-  #   notify_terminal: false
-  #   sync_strategy: 'native_osx'
-  #   src: '${DB_PATH}'
-  #   sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+  # Multi app volumes
+  # app1
+  app1_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${APP1_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+  # app2
+  app2_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${APP2_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+  # appN ...
+
+  # Db volume
+  db_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${DB_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+
+  # Redis volume
+  redis_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${REDIS_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]
+
+  # RabbitMQ volume
+  rabbitmq_sync:
+    notify_terminal: false
+    sync_strategy: 'native_osx'
+    src: '${RABBITMQ_PATH}'
+    sync_excludes: [ '.DS_Store', '.git', '.idea', 'node_modules' ]

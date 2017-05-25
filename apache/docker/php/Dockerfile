@@ -6,6 +6,9 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libpcre3-dev \
+    libzip-dev \
+    # Enable virtualhost aliases \
+	&& ln -s /etc/apache2/mods-available/vhost_alias.load /etc/apache2/mods-enabled/vhost_alias.load \
 	# Install Composer \
 	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
 	&& composer --version \
@@ -30,7 +33,10 @@ RUN apt-get update && apt-get install -y \
 	# install xdebug \
 	&& pecl install xdebug \
 	&& docker-php-ext-enable xdebug \
+	# install zip \
+	&& pecl install zip \
+	&& docker-php-ext-enable zip \
 	# aliases \
 	&& echo 'alias sf="php bin/console"' >> ~/.bashrc
 
-WORKDIR /var/www/symfony
+WORKDIR /var/www

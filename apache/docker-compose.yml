@@ -23,13 +23,16 @@ services:
 
   # PHP/Apache container based on latest official docker image
   # https://hub.docker.com/_/php/
+  # single app container
   web:
     container_name: app_web
     build: docker/php/
+    environment:
+      APP_NAME: ${APP_NAME}
     volumes:
       - app_data:${APP_CONTAINER_PATH}:nocopy
       - ./docker/php/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
-      - ./docker/apache/default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./docker/apache/default-single.conf:/etc/apache2/sites-enabled/000-default.conf
     links:
       - redis
       - rabbitmq
@@ -42,6 +45,30 @@ services:
       app_lan :
         aliases:
           - app.web
+
+  # PHP/Apache container based on latest official docker image
+  # https://hub.docker.com/_/php/
+  # multi app container
+  web-multi:
+    container_name: multi_app_web
+    build: docker/php/
+    volumes:
+      - app1_data:${APP1_CONTAINER_PATH}:nocopy
+      - app2_data:${APP2_CONTAINER_PATH}:nocopy
+      - ./docker/php/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+      - ./docker/apache/default-multi.conf:/etc/apache2/sites-enabled/000-default.conf
+    links:
+      - redis
+      - rabbitmq
+      - db
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    networks:
+      app_lan :
+        aliases:
+          - app.web.multi
 
 #  # PHP cli container based on latest official docker image
 #  # https://hub.docker.com/_/php/
@@ -108,8 +135,10 @@ services:
       - ./docker/varnish/default.vcl:/etc/varnish/default.vcl
     links:
       - web
+      - web-multi
     depends_on:
       - web
+      - web-multi
     networks:
       app_lan :
         aliases:
@@ -128,6 +157,8 @@ services:
     volumes:
       - elk_data:/var/lib/elasticsearch
       - app_data:${APP_CONTAINER_PATH}:nocopy
+      - app1_data:${APP1_CONTAINER_PATH}:nocopy
+      - app2_data:${APP2_CONTAINER_PATH}:nocopy
 #      - nginx_data:/var/log/apache2
       - ./docker/elk/logstash/conf.d:/etc/logstash/conf.d
       - ./docker/elk/logstash/patterns:/etc/logstash/logstash/patterns
@@ -145,9 +176,19 @@ volumes:
   app_data:
     external: 
       name: app_sync
+  app1_data:
+    external: 
+      name: app1_sync
+  app2_data:
+    external: 
+      name: app2_sync
   db_data:
-    # external: 
-    #   name: db_sync
-  elk_data:
+    external: 
+      name: db_sync
   redis_data:
+    external: 
+      name: redis_sync
   rabbitmq_data:
+    external: 
+      name: rabbitmq_sync
+  elk_data:
