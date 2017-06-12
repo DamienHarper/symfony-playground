@@ -2,6 +2,18 @@ version: '3'
 
 services:
 
+  # data:
+  #   container_name: app_data
+  #   image: alpine
+  #   volumes:
+  #     # - db_data:/var/lib/mysql
+  #     - ${DB_PATH}:/var/lib/mysql:delegated
+  #   networks:
+  #     app_lan :
+  #       aliases:
+  #         - app.data
+
+
   # MySQL container based on latest official docker image
   # VOLUME /var/lib/mysql
   db:
@@ -15,7 +27,8 @@ services:
     ports:
       - ${MYSQL_PORT}:3306
     volumes:
-      - db_data:/var/lib/mysql
+      # - db_data:/var/lib/mysql
+      - ${DB_PATH}:/var/lib/mysql:delegated
     networks:
       app_lan :
         aliases:
@@ -30,8 +43,11 @@ services:
     environment:
       APP_NAME: ${APP_NAME}
     volumes:
-      - app_data:${APP_CONTAINER_PATH}:nocopy
+      # - app_data:${APP_CONTAINER_PATH}:nocopy
+      - ${APP_PATH}:${APP_CONTAINER_PATH}:delegated
+      - app_logs:/var/log/apache2
       - ./docker/php/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+      - ./docker/apache/split-logfile:/usr/sbin/split-logfile
       - ./docker/apache/default-single.conf:/etc/apache2/sites-enabled/000-default.conf
     links:
       - redis
@@ -53,9 +69,13 @@ services:
     container_name: multi_app_web
     build: docker/php/
     volumes:
-      - app1_data:${APP1_CONTAINER_PATH}:nocopy
-      - app2_data:${APP2_CONTAINER_PATH}:nocopy
+      # - app1_data:${APP1_CONTAINER_PATH}:nocopy
+      # - app2_data:${APP2_CONTAINER_PATH}:nocopy
+      - ${APP1_PATH}:${APP1_CONTAINER_PATH}:delegated
+      - ${APP2_PATH}:${APP2_CONTAINER_PATH}:delegated
+      - multi_app_logs:/var/log/apache2
       - ./docker/php/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+      - ./docker/apache/split-logfile:/usr/sbin/split-logfile
       - ./docker/apache/default-multi.conf:/etc/apache2/sites-enabled/000-default.conf
     links:
       - redis
@@ -90,7 +110,7 @@ services:
 #      app_lan :
 #        aliases:
 #          - app.worker
-##      command: 'bin/console ...'
+##     command: 'bin/console ...'
 
   # Redis container based on latest official docker image
   # https://hub.docker.com/_/redis/
@@ -101,7 +121,8 @@ services:
     ports:
       - ${REDIS_PORT}:6379
     volumes:
-      - redis_data:/data
+      # - redis_data:/data
+      - ${REDIS_PATH}:/data:delegated
     networks:
       app_lan :
         aliases:
@@ -114,7 +135,8 @@ services:
     container_name: app_rabbitmq
     image: rabbitmq:alpine
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      # - rabbitmq_data:/var/lib/rabbitmq
+      - ${RABBITMQ_PATH}:/var/lib/rabbitmq:delegated
     networks:
       app_lan :
         aliases:
@@ -133,9 +155,9 @@ services:
       - ${VARNISH_PORT}:80
     volumes:
       - ./docker/varnish/default.vcl:/etc/varnish/default.vcl
-    links:
-      - web
-      - web-multi
+    # links:
+    #   - web
+    #   - web-multi
     depends_on:
       - web
       - web-multi
@@ -155,15 +177,23 @@ services:
       - ${ELK_ES_PORT}:9200
       - ${ELK_LOGSTASH_PORT}:5044
     volumes:
-      - elk_data:/var/lib/elasticsearch
-      - app_data:${APP_CONTAINER_PATH}:nocopy
-      - app1_data:${APP1_CONTAINER_PATH}:nocopy
-      - app2_data:${APP2_CONTAINER_PATH}:nocopy
-#      - nginx_data:/var/log/apache2
+      # - elk_data:/var/lib/elasticsearch
+      # - app_data:${APP_CONTAINER_PATH}:nocopy
+      # - app1_data:${APP1_CONTAINER_PATH}:nocopy
+      # - app2_data:${APP2_CONTAINER_PATH}:nocopy
+      - ${APP_LOGS_PATH}:${APP_LOGS_CONTAINER_PATH}:delegated
+      - ${APP1_LOGS_PATH}:${APP1_LOGS_CONTAINER_PATH}:delegated
+      - ${APP2_LOGS_PATH}:${APP2_LOGS_CONTAINER_PATH}:delegated
+      - app_logs:/var/log/apache2/single_app
+      - multi_app_logs:/var/log/apache2/multi_app
       - ./docker/elk/logstash/conf.d:/etc/logstash/conf.d
-      - ./docker/elk/logstash/patterns:/etc/logstash/logstash/patterns
+      - ./docker/elk/logstash/patterns:/etc/logstash/patterns
+    # links:
+    #   - web
+    #   - web-multi
     depends_on:
-      - varnish
+      - web
+      - web-multi
     networks:
       app_lan :
         aliases:
@@ -173,22 +203,5 @@ networks:
   app_lan :
 
 volumes:
-  app_data:
-    external: 
-      name: app_sync
-  app1_data:
-    external: 
-      name: app1_sync
-  app2_data:
-    external: 
-      name: app2_sync
-  db_data:
-    external: 
-      name: db_sync
-  redis_data:
-    external: 
-      name: redis_sync
-  rabbitmq_data:
-    external: 
-      name: rabbitmq_sync
-  elk_data:
+  app_logs:
+  multi_app_logs:
